@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDG Purdue - RAG Demo</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            box-sizing: border-box;
+            color-scheme: dark;
+            width: 100%;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column; 
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        #logo {
+            display: block;
+            width: 200px;
+            height: auto;
+            margin: 0 auto 1.5rem auto;
+        }
+
+        main {
+            width: 100%;
+            max-width: 960px;
+            background: transparent;
+            border-radius: 12px;
+            box-shadow: none;
+            border: none;
+            overflow: hidden;
+        }
+
+        main h1 {
+            font-size: 1.75rem; 
+            color: #FFD700;
+            margin: 0 0 2.5rem 0;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1.5rem;
+            font-weight: 500; 
+        }
+
+        #input-panel, #output-panel {
+            padding: 2rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #upload-label {
+            display: inline-block;
+            padding: 1rem 1.75rem;
+            background-color: #333;
+            color: #e0e0e0;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            margin-bottom: 0.75rem;
+        }
+
+        #upload-label:hover {
+            background-color: #444;
+        }
+
+        #file-status {
+            display: block;
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+        
+        label[for="question"] {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .query-container {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        #question {
+            flex-grow: 1;
+            padding: 1rem 1.75rem;
+            border-radius: 50px;
+            border: 1px solid #444;
+            font-size: 1rem;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif; 
+        }
+
+        #question:focus {
+            border-color: #FFD700;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+
+        #submitBtn {
+            padding: 1rem 1.75rem;
+            background-color: #FFD700;
+            color: #121212;
+            border: none;
+            cursor: pointer;
+            font-weight: 700; 
+            transition: background-color 0.2s;
+            border-radius: 50px;
+            font-family: 'Roboto', sans-serif; 
+        }
+
+        #submitBtn:hover {
+            background-color: #e6c300;
+        }
+
+        #submitBtn:disabled {
+            background-color: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        #response-area {
+            background-color: #2a2a2a;
+            border-radius: 28px;
+            min-height: 100px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #response {
+            width: 100%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem; 
+            color: #f1f1f1;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #loader {
+            border: 4px solid #444;
+            border-top: 4px solid #FFD700;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <img src="https://i.postimg.cc/6qZ2Y7Ys/unnamed-2.png" alt="Google Developers Logo" id="logo">
+
+    <main>
+        <h1>GDG Purdue - RAG Demo</h1>
+
+        <div id="input-panel">
+            <h2>Controls</h2>
+            
+            <div class="input-group">
+                <input type="file" id="textFile" accept=".txt">
+                <label for="textFile" id="upload-label">Upload .txt File</label>
+                <span id="file-status">No file uploaded.</span>
+            </div>
+            
+            <label for="question">Ask a Question</label>
+            <div class="query-container">
+                <input type="text" id="question" placeholder="e.g., What is the price of a basic tune-up?">
+                <button id="submitBtn">Ask</button>
+            </div>
+        </div>
+
+        <div id="output-panel">
+            <h2>Response</h2>
+            <div id="response-area">
+                <div id="loader" class="hidden"></div>
+                <pre id="response">Upload a file and ask a question to get started.</pre>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const fileInput = document.getElementById('textFile');
+        const uploadLabel = document.getElementById('upload-label');
+        const fileStatus = document.getElementById('file-status');
+        const questionInput = document.getElementById('question');
+        const submitButton = document.getElementById('submitBtn');
+        const responsePre = document.getElementById('response');
+        const loader = document.getElementById('loader');
+        
+        let fileContent = '';
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) { return; }
+
+            uploadLabel.textContent = file.name;
+            fileStatus.textContent = 'Processing file...';
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                fileContent = e.target.result;
+                const form = new FormData();
+                const uploadUrl = `http://127.0.0.1:8000/upload_text`;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000);
+                form.append("text", fileContent);
+                
+                try {
+                    const uploadRes = await fetch(uploadUrl, {
+                        signal: controller.signal, method: 'POST',
+                        body: form
+                    });
+                    clearTimeout(timeoutId);
+                    
+                    if (!uploadRes.ok) {
+                        throw new Error(`Server responded with status: ${uploadRes.status}`);
+                    }
+                    
+                    await uploadRes.json();
+                    fileStatus.textContent = `File "${file.name}" is ready.`;
+                    responsePre.textContent = "File processed. Now you can ask questions about its content.";
+                    
+                } catch (error) {
+                    fileStatus.textContent = "Error uploading file.";
+                    responsePre.textContent = `Error: ${error.message}`;
+                    uploadLabel.textContent = "Upload .txt File";
+                }
+            };
+            reader.onerror = (e) => {
+                console.error("Error reading file:", e);
+                responsePre.textContent = "Error: Could not read the selected file.";
+            };
+            reader.readAsText(file);
+        });
+
+        submitButton.addEventListener('click', async () => {
+            const question = questionInput.value;
+            if (!fileContent) {
+                responsePre.textContent = 'Please upload a text file first.';
+                return;
+            }
+            if (!question) {
+                responsePre.textContent = 'Please enter a question.';
+                return;
+            }
+
+            submitButton.disabled = true;
+            questionInput.disabled = true;
+            responsePre.classList.add('hidden'); 
+            loader.classList.remove('hidden'); 
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+            try {
+                const url = `http://127.0.0.1:8000/ask`;
+                const questionForm = new FormData();
+                questionForm.append("question", question);
+                
+                const response = await fetch(url, {
+                    signal: controller.signal, method: 'POST',
+                    body: questionForm
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const answer = await response.json();
+                responsePre.textContent = answer.answer;
+
+            } catch (error) {
+                let errorMessage;
+                if (error.name === 'AbortError') {
+                    errorMessage = 'The request timed out after 60 seconds. The server might be too busy or the task is very complex.';
+                } else {
+                    errorMessage = `An error occurred. Make sure your Python server is running. \n\nDetails: ${error.message}`;
+                }
+                responsePre.textContent = errorMessage;
+            } finally {
+                clearTimeout(timeoutId);
+                submitButton.disabled = false;
+                questionInput.disabled = false;
+                loader.classList.add('hidden');
+                responsePre.classList.remove('hidden'); 
+            }
+        });
+
+        questionInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); 
+                submitButton.click();
+            }
+        });
+    </script>
+</body>
+
+</html>
