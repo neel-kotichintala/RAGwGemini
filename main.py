@@ -17,14 +17,14 @@ import re
 import numpy as np
 import faiss
 
-
+load_dotenv()
 # Create Gemini client (new API style)
 client = genai.Client(
     api_key=os.getenv("GOOGLE_API_KEY"),
     http_options={"api_version": "v1alpha"}
 )
 
-#Creating a FastAPI appliaction for our backend
+#Creating a FastAPI application for our backend
 app = FastAPI(title="Gemini RAG Workshop")
 app.add_middleware(
     CORSMiddleware,
@@ -45,12 +45,11 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50):
     """
     words = re.split(r"\s+", text)
     
-    #TODO: Fill in the question marks (?) in the following code segment
-    chunks = ?
+    chunks = []
     for i in range(0, len(words), chunk_size - overlap):
         chunk = " ".join(words[i:i + chunk_size])
-        ?.append(?)
-    return ?
+        chunks.append(chunk)
+    return chunks
 
 
 # EMBEDDING + FAISS FUNCTIONS
@@ -59,10 +58,9 @@ def create_embeddings(text_list):
     Create embeddings for each text chunk using Gemini's embedding model (new API format).
     """
 
-    #TODO: Fill in the question mark (Hint: Look at what we consider in the if statements ahead!)
-    ? = client.models.embed_content(
+    response = client.models.embed_content(
         model="text-embedding-004",
-        contents= ? #TODO: Fill in the question mark
+        contents= text_list 
     )
 
     # The new API returns an object with .embeddings
@@ -73,12 +71,12 @@ def create_embeddings(text_list):
     elif hasattr(response, "embedding"):
         embeddings = np.array([response.embedding.values], dtype="float32")
     else:
-        raise ValueError(f"Unexpected embedding structure: {?}") #TODO: Fill in the question mark
-
+        raise ValueError(f"Unexpected embedding structure: {embeddings}") #TODO: Fill in the question mark
+    
     if embeddings.ndim > 2:
         embeddings = embeddings.reshape(embeddings.shape[0], -1)
 
-    return ? #TODO: Fill in the question mark
+    return embeddings #TODO: Fill in the question mark
 
     
 
@@ -86,14 +84,13 @@ def create_faiss_index(embeddings: np.ndarray):
     """
     Create FAISS index from embeddings.
     """
-    #TODO: Fill in the question marks ahead 
     dim = embeddings.shape[1]
-    index = ?.IndexFlatL2(dim)
+    index = faiss.IndexFlatL2(dim)
     index.add(embeddings)
-    return ?
+    return index
 
     
-def retrieve_top_k(index, query_embedding, chunks, k=?):
+def retrieve_top_k(index, query_embedding, chunks, k=3):
     """
     Retrieve top-k most similar chunks.
     """
@@ -139,14 +136,14 @@ async def ask_question(question: str = Form(...)):
     top_chunks = retrieve_top_k(INDEX, q_embed, CHUNKS, k=3)
 
     # Build the prompt with retrieved context
-    context = "\n\n".join(?) #TODO: Fill in the question marks ahead! (PS: Look in the prompt too!)
+    context = "\n\n".join(top_chunks)
     prompt = f"""
 You are a helpful AI assistant. Use the following context to answer the user's question clearly and completely.
 
 Context:
-{?}
+{context}
 
-Question: {?}
+Question: {question}
 
 Answer:
 """
@@ -169,8 +166,8 @@ Answer:
     # Return both the answer and the retrieved context
     #TODO:Fill in the question marks below
     return {
-        "answer": ?,
-        "context_used": ?
+        "answer": answer,
+        "context_used": context
     }
 
 
